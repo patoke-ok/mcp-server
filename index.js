@@ -1,49 +1,50 @@
-import express from 'express'
-import dotenv from 'dotenv'
-import cors from 'cors'
-import { calculateSumTool } from './tools/calculateSum.js'
+import { Server } from "@modelcontextprotocol/sdk/server"
+import { ListToolsRequestSchema, CallToolRequestSchema } from "@modelcontextprotocol/sdk/types"
+import { calculateSumTool } from "./tools/calculateSum.js"
 
-dotenv.config()
-
-const app = express()
-const PORT = process.env.PORT || 3000
-
-app.use(cors())
-app.use(express.json())
-
-// Lista de herramientas disponibles
 const tools = [calculateSumTool]
 
-// Endpoint MCP oficial: POST /tools/list
-app.post('/tools/list', (req, res) => {
-  res.json({
+const server = new Server(
+  {
+    name: "Dataso MCP",
+    version: "1.0.0"
+  },
+  {
+    capabilities: {
+      tools: {}
+    }
+  }
+)
+
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return {
     tools: tools.map(({ run, ...meta }) => meta)
-  })
+  }
 })
 
-// Endpoint MCP oficial: POST /tools/call
-app.post('/tools/call', async (req, res) => {
-  const { name, arguments: args } = req.body
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params
   const tool = tools.find(t => t.name === name)
 
   if (!tool) {
-    return res.json({
+    return {
       isError: true,
       content: [{ type: "text", text: `Tool '${name}' no encontrada.` }]
-    })
+    }
   }
 
   try {
-    const result = await tool.run(args)
-    return res.json(result)
+    return await tool.run(args)
   } catch (e) {
-    return res.json({
+    return {
       isError: true,
       content: [{ type: "text", text: `Error: ${e.message}` }]
-    })
+    }
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`✅ MCP Server corriendo en http://localhost:${PORT}`)
+// Iniciar el servidor HTTP
+const port = process.env.PORT || 3000
+server.listenHttp({ port }).then(() => {
+  console.log(`✅ MCP server oficial corriendo en http://localhost:${port}`)
 })
