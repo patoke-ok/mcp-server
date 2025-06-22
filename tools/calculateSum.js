@@ -14,24 +14,16 @@ export const calculateSumTool = {
     readOnlyHint: true,
     openWorldHint: false
   },
-  run: async (args) => {
-    const { a, b } = args || {}
-    if (typeof a !== 'number' || typeof b !== 'number') {
+  run: async ({ a, b }) => {
+    if (typeof a !== "number" || typeof b !== "number") {
       return {
         isError: true,
-        content: [
-          { type: "text", text: "Los argumentos 'a' y 'b' deben ser números." }
-        ]
+        content: [{ type: "text", text: "Los argumentos 'a' y 'b' deben ser números." }]
       }
     }
 
     return {
-      content: [
-        {
-          type: "text",
-          text: `El resultado de ${a} + ${b} es ${a + b}`
-        }
-      ]
+      content: [{ type: "text", text: `El resultado de ${a} + ${b} es ${a + b}` }]
     }
   }
 }
